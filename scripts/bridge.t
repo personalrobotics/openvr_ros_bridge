@@ -11,16 +11,20 @@ local pipeline = require("graphics/pipeline.t")
 local openvr = require("vr/openvr.t")
 local vrcomps = require("vr/components.t")
 local ros = require("io/ros.t")
-local publishers = require("publishers.t")
 
 function init()
+  ROS = ros.Ros()
+  local connected = ROS:connect(truss.args[3])
+  if not connected then
+    truss.quit()
+    return
+  end
+
   load_config()
   app = VRApp({title = "openvr_ros_bridge",
                mirror = "left"})
   create_scene(app.ECS.scene)
   openvr.on("trackable_connected", add_trackable)
-  ROS = ros.Ros()
-  ROS:connect(truss.args[3])
   active_publishers = {}
 end
 
@@ -40,13 +44,15 @@ end
 
 function add_trackable(trackable)
   local device_class = trackable.device_class_name
-  if config[device_class] and config[device_class].publisher then
-    local pub_constructor = config[device_class].publisher
-    if type(pub_constructor == "string") then
-      pub_constructor = publishers[pub_constructor]
+  local cfg = config[device_class]
+  if cfg and cfg.publisher then
+    local pub = cfg.publisher(ROS, trackable, cfg)
+    if pub then
+      active_publishers[trackable.device_idx] = pub
+    else
+      print("Trackable [" .. device_class .. "] did not produce a publisher.")
+      print("Nothing will be published for this device.")
     end
-    local pub = pub_constructor(ROS, trackable, config[device_class])
-    active_publishers[trackable.device_idx] = pub
   else
     print("Trackable [" .. device_class .. "] has no configured publisher.")
     print("Nothing will be published for this device.")
