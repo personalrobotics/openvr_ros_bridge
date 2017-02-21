@@ -8,10 +8,9 @@ Obtain truss.exe and truss.zip from truss and place them in the root directory
 
 # Running
 
-On a linux machine with ROS installed (or through bash on windows), run the
-rosbridge server via
+On a machine with ROS:
 `roslaunch rosbridge_server rosbridge_websocket.launch`
 
-On the windows machine with OpenVR and whatever hardware you're using installed
-(presumably an HTC vive), run
+On the windows machine with OpenVR and HMD:
+[strongly recommended] start SteamVR
 `truss scripts/bridge.t rosbridge_hostname [config.t]`
