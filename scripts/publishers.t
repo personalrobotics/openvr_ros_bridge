@@ -18,7 +18,7 @@ function Pose:init(ros, trackable, options)
   self._tname = topic_name
   self._topic = ros:topic({
     topicName = topic_name,
-    messageType = "geometry_msgs/Pose",
+    messageType = "geometry_msgs/PoseStamped",
     queueSize = options.queue_size or 10
   })
   self._decimate = options.decimate or 9 -- default to 10fps publishing
@@ -27,6 +27,7 @@ function Pose:init(ros, trackable, options)
   self._matrix = math.Matrix4()
   self._trackable = trackable
   self._frame = 0
+  self._tf_frame = options.tf_frame or '0'
 end
 
 function Pose:update()
@@ -38,9 +39,10 @@ function Pose:update()
   self._trackable.pose:get_column(4, self._position)
   self._trackable.pose:to_quaternion(self._quaternion)
   self._topic:publish({
-    position    = self._position:to_dict3(),
-    orientation = self._quaternion:to_dict()
-  })
+    header = {frame_id = self._tf_frame},
+    pose = {position = self._position:to_dict3(),
+            orientation = self._quaternion:to_dict()}
+    })
 end
 
 function Pose:status()
