@@ -47,4 +47,55 @@ function Pose:status()
   return self._trackable.device_class_name .. "|" .. self.name .. ":" .. self._tname
 end
 
+local ViveButtons = class("ViveButtons")
+m.ViveButtons = ViveButtons
+
+function ViveButtons:init(ros, trackable, options)
+  local topic_name = string.format(options.topic, trackable.device_idx)
+  print("Creating new ViveButtons publisher on " .. topic_name)
+  self._tname = topic_name
+  self._topic = ros:topic({
+    topicName = topic_name,
+    messageType = "sensor_msgs/Joy",
+    queueSize = options.queue_size or 10
+  })
+  self._decimate = options.decimate or 9 -- default to 10fps publishing
+  self._trackable = trackable
+  self._frame = 0
+end
+
+function ViveButtons:update()
+  local msg = {buttons = {0,0,0,0}, axes = {0.0, 0.0, 0.0}}
+  local t = self._trackable
+  msg.buttons[1] = t.buttons.ApplicationMenu or 0
+  msg.buttons[2] = t.buttons.SteamVR_Trigger or 0
+  msg.buttons[3] = t.buttons.SteamVR_Touchpad or 0
+  msg.buttons[4] = t.buttons.Grip or 0
+  msg.axes[1] = t.axes.trackpad1.x
+  msg.axes[2] = t.axes.trackpad1.y
+  msg.axes[3] = t.axes.trigger1.x
+  self._topic:publish(msg)
+end
+
+ViveButtons.status = Pose.status
+
+local Multi = class("Multi")
+m.Multi = Multi
+
+function Multi:init(ros, trackable, pubs)
+  self._pubs = {}
+  for _, opts in ipairs(pubs) do
+    local p = opts.publisher(ros, trackable, opts)
+    if p then table.insert(self._pubs, p) end
+  end
+end
+
+function Multi:update()
+  for _, pub in ipairs(self._pubs) do pub:update() end
+end
+
+function Multi:status()
+  return self._trackable.device_class_name .. "|" .. self.name
+end
+
 return m

@@ -13,6 +13,7 @@ local config = {}
 config.Controller = {
   topic = "/openvr/controller_%d",
   publisher = publishers.Pose
+  --          publishers.ViveButtons -- if you want to publish the buttons
 }
 
 config.Generic = {
