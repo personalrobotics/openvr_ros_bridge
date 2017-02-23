@@ -12,7 +12,8 @@ to ROS over Rosbridge
 
 # Installation
 
-Easy option: download the binary release and unzip somewhere convenient.
+Easy option: download [the binary release](https://github.com/personalrobotics/openvr_ros_bridge/releases/tag/v0.1.0)
+and unzip somewhere convenient.
 
 Harder option: compile the
 [feature/ecs branch of truss](https://github.com/PyryM/truss/tree/feature/ecs),
