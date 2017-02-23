@@ -15,15 +15,18 @@ local grid = require("graphics/grid.t")
 local statusui = require("statusui.t")
 
 function init()
-  ROS = ros.Ros()
-  local connected = ROS:connect(truss.args[3])
-  if not connected then
-    truss.quit()
-    return
-  end
-  rosinfoline = "ROS: " .. truss.args[3]
+  local connected = false
 
-  load_config()
+  if truss.args[3] then
+    ROS = ros.Ros()
+    connected = ROS:connect(truss.args[3])
+    rosinfoline = "ROS: " .. truss.args[3]
+  else
+    rosinfoline = "No host specified as command line option!"
+  end
+
+  if connected then load_config() else config = {} end
+
   app = VRApp({title = "openvr_ros_bridge", nvg = true,
                mirror = "left", debugtext = true})
   create_scene(app.ECS.scene)
@@ -37,13 +40,15 @@ end
 function update()
   app:update()
   status.status.lines = {}
-  if ROS.socket.open then
+  if ROS and ROS.socket.open then
     status.status.lines[1] = rosinfoline
-  else
+  elseif ROS then
     status.status.lines[1] = "ROS: Disconnected"
+  else
+    status.status.lines[1] = rosinfoline
   end
   update_publishers(status.status.lines)
-  ROS:update()
+  if ROS then ROS:update() end
 end
 
 function load_config()

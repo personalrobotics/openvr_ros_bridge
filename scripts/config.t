@@ -11,7 +11,7 @@ local config = {}
 
 -- set up how different types of trackables are published
 config.Controller = {
-  topic = "/openvr/controller_%d",
+  topic = "/openvr/controller_pose_%d",
   publisher = publishers.Pose
   --          publishers.ViveButtons -- if you want to publish the buttons
 }
