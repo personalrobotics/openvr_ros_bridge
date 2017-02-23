@@ -11,6 +11,7 @@ local pipeline = require("graphics/pipeline.t")
 local openvr = require("vr/openvr.t")
 local vrcomps = require("vr/components.t")
 local ros = require("io/ros.t")
+local grid = require("graphics/grid.t")
 
 function init()
   ROS = ros.Ros()
@@ -22,7 +23,7 @@ function init()
 
   load_config()
   app = VRApp({title = "openvr_ros_bridge",
-               mirror = "left"})
+               mirror = "left", debugtext = true})
   create_scene(app.ECS.scene)
   openvr.on("trackable_connected", add_trackable)
   active_publishers = {}
@@ -102,11 +103,14 @@ function create_scene(root)
   sphere_geo = geo
   sphere_mat = mat
 
-  local thingy = entity.Entity3d()
-  thingy.position:set(0.0, 0.5, 0.0)
-  thingy:update_matrix()
-  thingy:add_component(pipeline.MeshShaderComponent(geo, mat))
-  root:add(thingy)
+  local thegrid = grid.Grid({ spacing = 0.5, numlines = 8,
+                              color = {0.8, 0.8, 0.8}, thickness = 0.003})
+  thegrid.quaternion:euler({x= -math.pi / 2.0, y=0, z=0}, 'ZYX')
+  thegrid:update_matrix()
+  root:add(thegrid)
+
+  local axis_geo = require("geometry/widgets.t").axis_widget_geo("axis", 0.4, 0.2, 6)
+  root:add(pipeline.Mesh("axis0", axis_geo, mat))
 end
 
 -- adds the controller model in
