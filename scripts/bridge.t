@@ -12,6 +12,7 @@ local openvr = require("vr/openvr.t")
 local vrcomps = require("vr/components.t")
 local ros = require("io/ros.t")
 local grid = require("graphics/grid.t")
+local statusui = require("statusui.t")
 
 function init()
   ROS = ros.Ros()
@@ -20,18 +21,28 @@ function init()
     truss.quit()
     return
   end
+  rosinfoline = "ROS: " .. truss.args[3]
 
   load_config()
-  app = VRApp({title = "openvr_ros_bridge",
+  app = VRApp({title = "openvr_ros_bridge", nvg = true,
                mirror = "left", debugtext = true})
   create_scene(app.ECS.scene)
   openvr.on("trackable_connected", add_trackable)
   active_publishers = {}
+
+  status = statusui.create_ui()
+  app.ECS.scene:add(status)
 end
 
 function update()
   app:update()
-  update_publishers()
+  status.status.lines = {}
+  if ROS.socket.open then
+    status.status.lines[1] = rosinfoline
+  else
+    status.status.lines[1] = "ROS: Disconnected"
+  end
+  update_publishers(status.status.lines)
   ROS:update()
 end
 
@@ -39,8 +50,24 @@ function load_config()
   config = require(truss.args[4] or "config.t")
 end
 
-function update_publishers()
-  for _, pub in pairs(active_publishers) do pub:update() end
+function update_publishers(statuslines)
+  local templines = {}
+  for idx, pub in pairs(active_publishers) do
+    pub:update()
+    templines[idx] = string.format("%2d|%s", idx, pub:status())
+  end
+  for i = 0,openvr.MAX_TRACKABLES do
+    local line = templines[i]
+    if not line then
+      if openvr.trackables[i+1] then
+        line = string.format("%2d|%s|[unpublished]",
+                             i, openvr.trackables[i+1].device_class_name)
+      else
+        line = string.format("%2d|[none]", i)
+      end
+    end
+    statuslines[i+2] = line
+  end
 end
 
 function add_trackable(trackable)

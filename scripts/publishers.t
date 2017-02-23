@@ -15,6 +15,7 @@ m.Pose = Pose
 function Pose:init(ros, trackable, options)
   local topic_name = string.format(options.topic, trackable.device_idx)
   print("Creating new Pose publisher on " .. topic_name)
+  self._tname = topic_name
   self._topic = ros:topic({
     topicName = topic_name,
     messageType = "geometry_msgs/Pose",
@@ -40,6 +41,10 @@ function Pose:update()
     position    = self._position:to_dict3(),
     orientation = self._quaternion:to_dict()
   })
+end
+
+function Pose:status()
+  return self._trackable.device_class_name .. "|" .. self.name .. ":" .. self._tname
 end
 
 return m
