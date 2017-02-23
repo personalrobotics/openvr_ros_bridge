@@ -1,5 +1,5 @@
 truss.exe
-truss.zip
+*.zip
 trusslog.txt
 bin/
 lib/
