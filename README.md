@@ -31,7 +31,8 @@ On a windows machine with OpenVR and HMD connected:
 
 1. Start SteamVR (optional, but greatly speeds up startup)
 2. In a command prompt, navigate to the openvr_ros_bridge folder
-3. In prompt run: `truss scripts/bridge.t "ws://[host]:[port]"`
+3. In prompt run: `truss scripts/bridge.t "ws://[host]:[port]"`. Note that the default
+rosbridge port is 9090, so this will look something like `truss scripts/bridge.t "ws://othercomp:9090"`.
 
 # Configuration
 
