@@ -14,9 +14,9 @@ local ros = require("io/ros.t")
 local grid = require("graphics/grid.t")
 local statusui = require("statusui.t")
 
-function init()
-  local connected = false
+local connected = false
 
+function init()
   if truss.args[3] then
     ROS = ros.Ros()
     connected = ROS:connect(truss.args[3])
@@ -25,7 +25,7 @@ function init()
     rosinfoline = "No host specified as command line option!"
   end
 
-  if connected then load_config() else config = {} end
+  load_config()
 
   app = VRApp({title = "openvr_ros_bridge", nvg = true,
                mirror = "left", debugtext = true})
@@ -78,7 +78,7 @@ end
 function add_trackable(trackable)
   local device_class = trackable.device_class_name
   local cfg = config[device_class]
-  if cfg and cfg.publisher then
+  if connected and cfg and cfg.publisher then
     local pub = cfg.publisher(ROS, trackable, cfg)
     if pub then
       active_publishers[trackable.device_idx] = pub
@@ -91,8 +91,9 @@ function add_trackable(trackable)
     print("Nothing will be published for this device.")
   end
 
-  if device_class == "Controller" then
-    add_controller_model(trackable)
+  if cfg and cfg.display then
+    print("Adding model?")
+    add_trackable_model(trackable)
   end
 end
 
@@ -146,7 +147,7 @@ function create_scene(root)
 end
 
 -- adds the controller model in
-function add_controller_model(trackable)
+function add_trackable_model(trackable)
   local geo = icosphere.icosphere_geo(0.1, 3, "cico")
   local m2 = {
     state = sphere_mat.state,
@@ -158,8 +159,8 @@ function add_controller_model(trackable)
 
   local controller = entity.Entity3d()
   controller:add_component(pipeline.MeshShaderComponent(geo, m2))
-  controller:add_component(vrcomps.VRControllerComponent(trackable))
-  controller.vr_controller:load_geo_to_component("mesh_shader")
+  controller:add_component(vrcomps.VRTrackableComponent(trackable))
+  controller.vr_trackable:load_geo_to_component("mesh_shader")
 
   app.ECS.scene:add(controller)
 end

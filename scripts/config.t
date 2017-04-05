@@ -9,17 +9,21 @@ local publishers = require("publishers.t")
 -- global variables
 local config = {}
 
+print("yay?")
+
 -- set up how different types of trackables are published
 config.Controller = {
   topic = "/openvr/controller_pose_%d",
   publisher = publishers.Pose,
   --          publishers.ViveButtons -- if you want to publish the buttons
-  tf_frame = 'my_frame' -- defaults to '0'
+  tf_frame = 'my_frame', -- defaults to '0'
+  display = true         -- show the model in the HMD
 }
 
 config.Generic = {
   topic = "/openvr/generic_%d",
-  publisher = publishers.Pose
+  publisher = publishers.Pose,
+  display = true
 }
 
 config.HMD = {
