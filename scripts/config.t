@@ -9,8 +9,6 @@ local publishers = require("publishers.t")
 -- global variables
 local config = {}
 
-print("yay?")
-
 -- set up how different types of trackables are published
 config.Controller = {
   topic = "/openvr/controller_pose_%d",
