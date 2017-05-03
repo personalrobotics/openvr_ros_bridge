@@ -9,6 +9,9 @@ local publishers = require("publishers.t")
 -- global variables
 local config = {}
 
+-- set
+config.Connection = publishers.ROSConnection
+
 -- set up how different types of trackables are published
 config.Controller = {
   topic = "/openvr/controller_pose_%d",

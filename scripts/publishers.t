@@ -12,7 +12,8 @@ end
 local Pose = class("Pose")
 m.Pose = Pose
 
-function Pose:init(ros, trackable, options)
+function Pose:init(conn, trackable, options)
+  local ros = conn.ros
   local topic_name = string.format(options.topic, trackable.device_idx)
   print("Creating new Pose publisher on " .. topic_name)
   self._tname = topic_name
@@ -52,7 +53,8 @@ end
 local ViveButtons = class("ViveButtons")
 m.ViveButtons = ViveButtons
 
-function ViveButtons:init(ros, trackable, options)
+function ViveButtons:init(conn, trackable, options)
+  local ros = conn.ros
   local topic_name = string.format(options.topic, trackable.device_idx)
   print("Creating new ViveButtons publisher on " .. topic_name)
   self._tname = topic_name
@@ -84,7 +86,8 @@ ViveButtons.status = Pose.status
 local Multi = class("Multi")
 m.Multi = Multi
 
-function Multi:init(ros, trackable, pubs)
+function Multi:init(conn, trackable, pubs)
+  local ros = conn.ros
   self._pubs = {}
   for _, opts in ipairs(pubs) do
     local p = opts.publisher(ros, trackable, opts)
@@ -98,6 +101,38 @@ end
 
 function Multi:status()
   return self._trackable.device_class_name .. "|" .. self.name
+end
+
+local ROSConnection = class("ROSConnection")
+m.ROSConnection = ROSConnection
+
+function ROSConnection:init(url)
+  local roslib = require("io/ros.t")
+  self.url = url
+  if url then
+    self.ros = roslib.Ros()
+    self.ros:connect(url)
+  end
+end
+
+function ROSConnection:is_connected()
+  return self.ros and self.ros.socket.open
+end
+
+function ROSConnection:status()
+  if not self.url then
+    return "ROS: No URL Specified"
+  elseif self:is_connected() then
+    return "ROS: " .. self.url
+  else
+    return "ROS: Disconnected"
+  end
+end
+
+function ROSConnection:update()
+  if self.ros then
+    self.ros:update()
+  end
 end
 
 return m

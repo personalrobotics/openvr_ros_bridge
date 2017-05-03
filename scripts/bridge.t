@@ -14,18 +14,14 @@ local ros = require("io/ros.t")
 local grid = require("graphics/grid.t")
 local statusui = require("statusui.t")
 
-local connected = false
+local conn = nil
 
 function init()
-  if truss.args[3] then
-    ROS = ros.Ros()
-    connected = ROS:connect(truss.args[3])
-    rosinfoline = "ROS: " .. truss.args[3]
-  else
-    rosinfoline = "No host specified as command line option!"
-  end
-
   load_config()
+
+  if config.Connection then
+    conn = config.Connection(truss.args[3])
+  end
 
   app = VRApp({title = "openvr_ros_bridge", nvg = true,
                mirror = "left", debugtext = true})
@@ -40,15 +36,13 @@ end
 function update()
   app:update()
   status.status.lines = {}
-  if ROS and ROS.socket.open then
-    status.status.lines[1] = rosinfoline
-  elseif ROS then
-    status.status.lines[1] = "ROS: Disconnected"
+  if conn then
+    status.status.lines[1] = conn:status()
   else
-    status.status.lines[1] = rosinfoline
+    status.status.lines[1] = "[no connection]"
   end
   update_publishers(status.status.lines)
-  if ROS then ROS:update() end
+  if conn then conn:update() end
 end
 
 function load_config()
@@ -78,8 +72,8 @@ end
 function add_trackable(trackable)
   local device_class = trackable.device_class_name
   local cfg = config[device_class]
-  if connected and cfg and cfg.publisher then
-    local pub = cfg.publisher(ROS, trackable, cfg)
+  if conn and conn:is_connected() and cfg and cfg.publisher then
+    local pub = cfg.publisher(conn, trackable, cfg)
     if pub then
       active_publishers[trackable.device_idx] = pub
     else
