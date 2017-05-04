@@ -6,18 +6,14 @@ local m = {}
 local class = require("class")
 local math = require("math")
 
-function m.resolve_topic(topic_value)
-end
-
 local Pose = class("Pose")
 m.Pose = Pose
 
 function Pose:init(conn, trackable, options)
-  local ros = conn.ros
   local topic_name = string.format(options.topic, trackable.device_idx)
   print("Creating new Pose publisher on " .. topic_name)
   self._tname = topic_name
-  self._topic = ros:topic({
+  self._topic = conn:topic({
     topicName = topic_name,
     messageType = "geometry_msgs/PoseStamped",
     queueSize = options.queue_size or 10
@@ -54,11 +50,10 @@ local ViveButtons = class("ViveButtons")
 m.ViveButtons = ViveButtons
 
 function ViveButtons:init(conn, trackable, options)
-  local ros = conn.ros
   local topic_name = string.format(options.topic, trackable.device_idx)
   print("Creating new ViveButtons publisher on " .. topic_name)
   self._tname = topic_name
-  self._topic = ros:topic({
+  self._topic = conn:topic({
     topicName = topic_name,
     messageType = "sensor_msgs/Joy",
     queueSize = options.queue_size or 10
@@ -87,10 +82,9 @@ local Multi = class("Multi")
 m.Multi = Multi
 
 function Multi:init(conn, trackable, pubs)
-  local ros = conn.ros
   self._pubs = {}
   for _, opts in ipairs(pubs) do
-    local p = opts.publisher(ros, trackable, opts)
+    local p = opts.publisher(conn, trackable, opts)
     if p then table.insert(self._pubs, p) end
   end
 end
@@ -129,10 +123,63 @@ function ROSConnection:status()
   end
 end
 
+function ROSConnection:topic(opts)
+  return self.ros:topic(opts)
+end
+
 function ROSConnection:update()
   if self.ros then
     self.ros:update()
   end
+end
+
+-- A plain websocket connection (for non-ros use cases)
+local WSConnection = class("WSConnection")
+m.WSConnection = WSConnection
+
+-- 'forward' declaration
+local WSTopic = class("WSTopic")
+
+function WSConnection:init(url)
+  local websocket = require("io/websocket.t")
+  self.url = url
+  self.socket = websocket.WebSocketConnection()
+  if url then self.socket:connect(url) end
+end
+
+function WSConnection:is_connected()
+  return self.socket and self.socket.open
+end
+
+function WSConnection:status()
+  if not self.url then
+    return "WS: No URL Specified"
+  elseif self:is_connected() then
+    return "WS: " .. self.url
+  else
+    return "WS: Disconnected"
+  end
+end
+
+function WSConnection:topic(opts)
+  return WSTopic(opts, self)
+end
+
+function WSConnection:update()
+  if self.socket then self.socket:update() end
+end
+
+function WSTopic:init(options, conn)
+  self.conn = conn
+  self.opts = options
+end
+
+function WSTopic:publish(msg)
+  local newmsg = {
+    topic = self.opts.topicName,
+    data = msg
+  }
+  self.conn.socket:sendJSON(newmsg)
 end
 
 return m
