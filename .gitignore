@@ -4,3 +4,4 @@ trusslog.txt
 bin/
 lib/
 include/
+node_modules/
