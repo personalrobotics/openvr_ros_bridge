@@ -133,6 +133,29 @@ function ROSConnection:update()
   end
 end
 
+-- A connection that logs to either a file or the regular log
+local FileConnection = class("FileConnection")
+m.FileConnection = FileConnection
+
+local FileTopic = class("FileTopic")
+
+function FileConnection:init(url)
+  -- todo
+  self.url = url or "LOG"
+end
+
+function FileConnection:is_connected()
+  return true -- assume we can always open the file?
+end
+
+function FileConnection:status()
+  return "File: " .. (self.url or "none")
+end
+
+function FileConnection:update()
+  -- nothing to do
+end
+
 -- A plain websocket connection (for non-ros use cases)
 local WSConnection = class("WSConnection")
 m.WSConnection = WSConnection
