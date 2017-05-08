@@ -14,9 +14,9 @@ function Pose:init(conn, trackable, options)
   print("Creating new Pose publisher on " .. topic_name)
   self._tname = topic_name
   self._topic = conn:topic({
-    topicName = topic_name,
-    messageType = "geometry_msgs/PoseStamped",
-    queueSize = options.queue_size or 10
+    topic_name = topic_name,
+    message_type = "geometry_msgs/PoseStamped",
+    queue_size = options.queue_size or 10
   })
   self._decimate = options.decimate or 9 -- default to 10fps publishing
   self._position = math.Vector()
@@ -54,9 +54,9 @@ function ViveButtons:init(conn, trackable, options)
   print("Creating new ViveButtons publisher on " .. topic_name)
   self._tname = topic_name
   self._topic = conn:topic({
-    topicName = topic_name,
-    messageType = "sensor_msgs/Joy",
-    queueSize = options.queue_size or 10
+    topic_name = topic_name,
+    message_type = "sensor_msgs/Joy",
+    queue_size = options.queue_size or 10
   })
   self._decimate = options.decimate or 9 -- default to 10fps publishing
   self._trackable = trackable
@@ -142,10 +142,13 @@ local FileTopic = class("FileTopic")
 function FileConnection:init(url)
   -- todo
   self.url = url or "LOG"
+  if self.url and self.url ~= "LOG" then
+    self.file, self.err = io.open(url, "w")
+  end
 end
 
 function FileConnection:is_connected()
-  return true -- assume we can always open the file?
+  return self.file or self.url == "LOG"
 end
 
 function FileConnection:status()
@@ -154,6 +157,27 @@ end
 
 function FileConnection:update()
   -- nothing to do
+end
+
+function FileConnection:topic(opts)
+  return FileTopic(self, opts.topic_name)
+end
+
+function FileConnection:write(data)
+  if self.file then
+    self.file:write(data .. "\n")
+  elseif self.url == "LOG" then
+    log.info(data)
+  end
+end
+
+function FileTopic:init(parent, header)
+  self.parent = parent
+  self.header = header
+end
+
+function FileTopic:publish(msg)
+  self.parent:write(self.header .. " " .. msg)
 end
 
 -- A plain websocket connection (for non-ros use cases)
@@ -199,7 +223,7 @@ end
 
 function WSTopic:publish(msg)
   local newmsg = {
-    topic = self.opts.topicName,
+    topic = self.opts.topic_name,
     data = msg
   }
   self.conn.socket:sendJSON(newmsg)
