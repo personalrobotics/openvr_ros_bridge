@@ -98,30 +98,6 @@ end
 --- Graphics setup
 ----------------------------------------------------------------------------
 
-function create_uniforms()
-  local uniforms = gfx.UniformSet()
-  uniforms:add(gfx.VecUniform("u_baseColor"))
-  uniforms:add(gfx.VecUniform("u_pbrParams"))
-  uniforms:add(gfx.VecUniform("u_lightDir", 4))
-  uniforms:add(gfx.VecUniform("u_lightRgb", 4))
-
-  uniforms.u_lightDir:set_multiple({
-          math.Vector( 1.0,  1.0,  0.0),
-          math.Vector(-1.0,  1.0,  0.0),
-          math.Vector( 0.0, -1.0,  1.0),
-          math.Vector( 0.0, -1.0, -1.0)})
-
-  uniforms.u_lightRgb:set_multiple({
-          math.Vector(0.8, 0.8, 0.8),
-          math.Vector(1.0, 1.0, 1.0),
-          math.Vector(0.1, 0.1, 0.1),
-          math.Vector(0.1, 0.1, 0.1)})
-
-  uniforms.u_baseColor:set(math.Vector(0.2,0.03,0.01,1.0))
-  uniforms.u_pbrParams:set(math.Vector(0.001, 0.001, 0.001, 0.7))
-  return uniforms
-end
-
 -- create a big red ball so that there's something to see at least
 function create_scene(root)
   local axis_geo = require("geometry/widgets.t").axis_widget_geo("axis", 0.4, 0.2, 6)
