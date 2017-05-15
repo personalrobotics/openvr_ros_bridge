@@ -85,9 +85,12 @@ function add_trackable(trackable)
     print("Nothing will be published for this device.")
   end
 
-  if cfg and cfg.display then
-    print("Adding model?")
-    add_trackable_model(trackable)
+  local display = cfg and cfg.display
+  if display == true then
+    local vis = require("visualizers.t")
+    add_visualizers(trackable, {vis.BasicModel()})
+  else
+    add_visualizers(trackable, display)
   end
 end
 
@@ -121,40 +124,25 @@ end
 
 -- create a big red ball so that there's something to see at least
 function create_scene(root)
-  local geo = icosphere.icosphere_geo(1.0, 3, "ico")
-  local mat = {
-    state = gfx.create_state(),
-    uniforms = create_uniforms(),
-    program = gfx.load_program("vs_basicpbr", "fs_basicpbr_faceted_x4")
-  }
-  sphere_geo = geo
-  sphere_mat = mat
-
+  local axis_geo = require("geometry/widgets.t").axis_widget_geo("axis", 0.4, 0.2, 6)
+  local pbr = require("shaders/pbr.t")
+  local axis_mat = pbr.FacetedPBRMaterial({0.2,0.03,0.01,1.0},
+                                          {0.001, 0.001, 0.001}, 0.7)
   local thegrid = grid.Grid({ spacing = 0.5, numlines = 8,
                               color = {0.8, 0.8, 0.8}, thickness = 0.003})
   thegrid.quaternion:euler({x= -math.pi / 2.0, y=0, z=0}, 'ZYX')
   thegrid:update_matrix()
   root:add(thegrid)
-
-  local axis_geo = require("geometry/widgets.t").axis_widget_geo("axis", 0.4, 0.2, 6)
-  root:add(pipeline.Mesh("axis0", axis_geo, mat))
+  root:add(pipeline.Mesh("axis0", axis_geo, axis_mat))
 end
 
--- adds the controller model in
-function add_trackable_model(trackable)
-  local geo = icosphere.icosphere_geo(0.1, 3, "cico")
-  local m2 = {
-    state = sphere_mat.state,
-    program = sphere_mat.program,
-    uniforms = sphere_mat.uniforms:clone()
-  }
-  m2.uniforms.u_baseColor:set(math.Vector(0.03,0.03,0.03,1.0))
-  m2.uniforms.u_pbrParams:set(math.Vector(0.001, 0.001, 0.001, 0.7))
-
-  local controller = entity.Entity3d()
-  controller:add_component(pipeline.MeshShaderComponent(geo, m2))
-  controller:add_component(vrcomps.VRTrackableComponent(trackable))
-  controller.vr_trackable:load_geo_to_component("mesh_shader")
-
-  app.ECS.scene:add(controller)
+-- adds in visualizers
+function add_visualizers(trackable, visualizers)
+  local trackable_entity = entity.Entity3d()
+  trackable_entity:add_component(vrcomps.VRTrackableComponent(trackable))
+  local root = app.ECS.scene
+  root:add(trackable_entity)
+  for _, vis_constructor in ipairs(visualizers) do
+    vis_constructor(root, trackable_entity, trackable)
+  end
 end

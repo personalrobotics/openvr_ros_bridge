@@ -38,7 +38,8 @@ end)
 -- foward declare this
 local LineHistoryComponent = line.LineShaderComponent:extend("LineHistoryComponent")
 
--- the line history entity actually gets attached to root
+-- the line history entity is attached to *root* rather than the trackable's
+-- entity, because it makes more sense to keep history in the world space
 m.LineHistory = make_factory(function(root, entity, trackable, options)
   local line_entity = entity.Entity3d()
   line_entity:add_component(LineHistoryComponent(options, entity))
