@@ -89,7 +89,7 @@ function add_trackable(trackable)
   if display == true then
     local vis = require("visualizers.t")
     add_visualizers(trackable, {vis.BasicModel()})
-  else
+  elseif display then
     add_visualizers(trackable, display)
   end
 end

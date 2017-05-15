@@ -4,6 +4,7 @@
 
 -- so we can use the 'built in' publishers
 local publishers = require("publishers.t")
+local vis = require("visualizers.t")
 
 -- this file is loaded as a normal module, which means that it cannot create
 -- global variables
@@ -18,7 +19,7 @@ config.Controller = {
   publisher = publishers.Pose,
   --          publishers.ViveButtons -- if you want to publish the buttons
   tf_frame = 'my_frame', -- defaults to '0'
-  display = true         -- show the model in the HMD
+  display = {vis.BasicModel(), vis.LineHistory()} -- show model and trails
 }
 
 config.Generic = {
