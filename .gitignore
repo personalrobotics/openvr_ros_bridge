@@ -5,3 +5,4 @@ bin/
 lib/
 include/
 node_modules/
+node_relay/
