@@ -2,7 +2,8 @@
 
 # openvr_ros_bridge
 Publishes poses from HMD/controllers/anything trackable from OpenVR on Windows
-to ROS over Rosbridge
+to ROS. It can also publish JSON to a generic websocket target, or log poses
+to a file.
 
 # Prerequisites
 
@@ -12,11 +13,10 @@ to ROS over Rosbridge
 
 # Installation
 
-Easy option: download [the binary release](https://github.com/personalrobotics/openvr_ros_bridge/releases/tag/v0.1.0)
+Easy option: download [the binary release](https://github.com/personalrobotics/openvr_ros_bridge/releases/tag/v0.2.0)
 and unzip somewhere convenient.
 
-Harder option: compile the
-[feature/ecs branch of truss](https://github.com/PyryM/truss/tree/feature/ecs),
+Harder option: compile [truss](https://github.com/PyryM/truss),
 zip all the folders in `truss/dist` into `truss.zip`, and place `truss.zip` and
 `truss.exe` in the root of this repo.
 
