@@ -22,7 +22,10 @@ zip all the folders in `truss/dist` into `truss.zip`, and place `truss.zip` and
 
 # Usage
 
-## General
+## General / File logging
+
+SteamVR should be started before the bridge, otherwise the bridge will itself
+try to start SteamVR, which is unreliable and may lead to a freeze or a crash.
 
 `truss scripts/bridge.t url_or_filename config_script_name.t`
 
@@ -48,5 +51,97 @@ default rosbridge port is 9090, so this will look something like
 
 # Configuration
 
-The file `scripts/config.t` contains the configuration. By default, the HMD,
-any controllers, and any generic trackables will have their poses published.
+Config scripts should be placed in `scripts/config/`.
+The file `scripts/config/default.t` contains the default configuration that will
+log poses to a file in CSV format. By default only controllers and generic
+trackables are logged.
+
+## File logging configuration
+
+```lua
+local publishers = require("file_publishers.t")
+local config = {}
+config.Connection = publishers.FileConnection
+config.Controller = {
+  topic = "controller_%d",
+  publisher = publishers.Pose,
+  display = true
+}
+return config
+```
+
+The file Pose publisher accepts the following additional options:
+| Option        | Description           | Default  |
+| ------------- |---------------------- | -------- |
+| decimate      | Publish only 1 in n frames | 9 |
+| field_order   | Ordered list of fields to write to CSV | {"time", "position", "quaternion"} |
+| divider       | Field divider      | "," |
+| precision     | Numerical precision to write | 4 |
+| format        | Numerical format string (overrides precision) | "%.4f" |
+
+## ROS publishing configuration
+
+```lua
+local publishers = require("ros_publishers.t")
+local config = {}
+config.Connection = publishers.ROSConnection
+config.Controller = {
+  topic = "/vr/controller_%d",
+  publisher = publishers.Pose,
+  display = true
+}
+return config
+```
+
+The ROS Pose publisher accepts the following additional options:
+| Option        | Description           | Default  |
+| ------------- |---------------------- | -------- |
+| decimate      | Publish only 1 in n frames | 9 |
+| tf_frame   | ROS TF frame to associate PoseStamped messages with | "0" |
+| queue_size       | Maximum ROS queue size  | 10 |
+
+
+## Visualization configuration
+
+Visualization options are independent of publishing/logging, and are specified
+in the `display` options in a configuration. Setting `display = true` uses the
+default visualization option, which is to just show the model. Likewise,
+`display = false` will not display anything (but will still publish if publication
+options are set).
+
+Additional visualization options can be included by setting `display`.
+```lua
+local vis = require("visualizers.t")
+
+config.Controller = {
+  -- [...]
+  display = {vis.BasicModel(), vis.LineHistory()} -- show model and trails
+}
+```
+
+Note the slightly unconventional syntax of having to actually call/construct
+the visualizer options, which is to allow additional options to be passed to
+a specific visualizer.
+
+### LineHistory
+Adds a trail to a trackable.
+
+```lua
+vis.LineHistory({
+  history_length = 900,    -- how many points the line can have
+  decimate = 3,            -- only push a new point every n frames
+  color = {0.8, 0.3, 0.3}, -- line color, in [0,1] RGB format
+  thickness = 0.005        -- line thickness, in m
+})
+```
+
+### BasicModel
+Shows a mesh model for the trackable, loaded from OpenVR.
+
+```lua
+vis.BasicModel({
+  diffuse = {0.03,0.03,0.03,1.0},   -- diffuse color
+  specular = {0.001, 0.001, 0.001}, -- specular color
+  roughness = 0.7                   -- roughness
+})
+```
