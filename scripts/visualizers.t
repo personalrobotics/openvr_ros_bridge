@@ -26,7 +26,7 @@ m.BasicModel = make_factory(function(root, target_entity, trackable, options)
     axis_widget_geo = require("geometry/widgets.t").axis_widget_geo("axis", 0.4, 0.2, 6)
   end
   local pbr = require("shaders/pbr.t")
-  local mat_options = options.material or {}
+  local mat_options = options.material or options
   local diffuse   = mat_options.diffuse   or {0.03,0.03,0.03,1.0}
   local tint      = mat_options.specular  or {0.001, 0.001, 0.001}
   local roughness = mat_options.roughness or 0.7
