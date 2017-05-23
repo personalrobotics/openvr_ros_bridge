@@ -46,7 +46,8 @@ function update()
 end
 
 function load_config()
-  config = require(truss.args[4] or "config.t")
+  local fn = "config/" .. (truss.args[4] or "default.t")
+  config = require(fn)
 end
 
 function update_publishers(statuslines)
