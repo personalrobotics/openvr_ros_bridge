@@ -70,7 +70,8 @@ config.Controller = {
 return config
 ```
 
-The file Pose publisher accepts the following additional options:
+The file Pose publisher accepts the following additional options
+
 | Option        | Description           | Default  |
 | ------------- |---------------------- | -------- |
 | decimate      | Publish only 1 in n frames | 9 |
@@ -93,7 +94,8 @@ config.Controller = {
 return config
 ```
 
-The ROS Pose publisher accepts the following additional options:
+The ROS Pose publisher accepts the following additional options
+
 | Option        | Description           | Default  |
 | ------------- |---------------------- | -------- |
 | decimate      | Publish only 1 in n frames | 9 |
