@@ -3,6 +3,7 @@
 --  ros-specific publishers
 
 local m = {}
+local class = require("class")
 local publishers = require("publishers.t")
 
 local Pose = publishers.Pose:extend("ROSPose")

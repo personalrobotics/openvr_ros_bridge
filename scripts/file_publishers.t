@@ -3,6 +3,7 @@
 -- dump pose to a file or the log
 
 local m = {}
+local class = require("class")
 local publishers = require("publishers.t")
 
 local Pose = publishers.Pose:extend("FilePose")
@@ -12,9 +13,9 @@ function Pose:init(conn, trackable, options)
   Pose.super.init(self, conn, trackable, options)
 
   self.divider = options.divider or ", "
-  self.data_order = options.data_order or {"position", "quaternion"}
-  for idx, v in ipairs(self.data_order) do
-    self.data_order[idx] = "_" .. v
+  self.field_order = options.field_order or {"time", "position", "quaternion"}
+  for idx, v in ipairs(self.field_order) do
+    self.field_order[idx] = "_" .. v
   end
   self.precision = options.precision or 4
   self.format_string = options.format or ("%." .. self.precision .. "f")
@@ -25,14 +26,22 @@ end
 
 function Pose:format()
   local parts = {}
-  for _, field_name in ipairs(self.data_order) do
+  for _, field_name in ipairs(self.field_order) do
     local field = self[field_name]
-    local data = field:to_dict()
-    for _, dataval in ipairs(data) do
-      local s = string.format(self.format_string, dataval)
-      table.insert(parts, s)
+    local ftype = type(field)
+    if ftype == "number" then
+      table.insert(parts, string.format(self.format_string, field))
+    elseif ftype == "string" then
+      table.insert(parts, field)
+    else -- assume table
+      local data = field:to_array()
+      for _, dataval in ipairs(data) do
+        local s = string.format(self.format_string, dataval)
+        table.insert(parts, s)
+      end
     end
   end
+
   return table.concat(parts, self.divider)
 end
 

@@ -3,6 +3,7 @@
 -- websocket publishers
 
 local m = {}
+local class = require("class")
 local publishers = require("publishers.t")
 local ros_publishers = require("ros_publishers.t")
 

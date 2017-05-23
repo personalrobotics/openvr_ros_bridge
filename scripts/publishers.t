@@ -18,6 +18,8 @@ function Pose:init(conn, trackable, options)
   self._matrix = math.Matrix4()
   self._trackable = trackable
   self._frame = 0
+  self._time = 0.0
+  self._t0 = truss.tic()
 end
 
 function Pose:update()
@@ -26,6 +28,7 @@ function Pose:update()
   self._frame = self._frame + 1
   if (self._frame % self._decimate) ~= 0 then return end
 
+  self._time = truss.toc(self._t0)
   self._trackable.pose:get_column(4, self._position)
   self._trackable.pose:to_quaternion(self._quaternion)
   self._velocity = self._trackable.velocity
