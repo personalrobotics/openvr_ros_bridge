@@ -1,9 +1,9 @@
--- config.t
+-- config/default.t
 --
--- default openvr_ros_bridge configuration file
+-- default openvr_ros_bridge configuration file that writes to a file
 
 -- so we can use the 'built in' publishers
-local publishers = require("publishers.t")
+local publishers = require("file_publishers.t")
 local vis = require("visualizers.t")
 
 -- this file is loaded as a normal module, which means that it cannot create
@@ -11,30 +11,27 @@ local vis = require("visualizers.t")
 local config = {}
 
 -- set
-config.Connection = publishers.ROSConnection
+config.Connection = publishers.FileConnection
 
 -- set up how different types of trackables are published
 config.Controller = {
-  topic = "/openvr/controller_pose_%d",
+  topic = "controller_%d",
   publisher = publishers.Pose,
-  --          publishers.ViveButtons -- if you want to publish the buttons
-  tf_frame = 'my_frame', -- defaults to '0'
+  decimate = 1, -- no decimation, write the full 90 fps
+  -- field_order = {"time", "position", "quaternion", "velocity", "angular_velocity"},
   display = {vis.BasicModel(), vis.LineHistory()} -- show model and trails
 }
 
 config.Generic = {
-  topic = "/openvr/generic_%d",
+  topic = "generic_%d",
   publisher = publishers.Pose,
-  display = true
+  decimate = 1, -- no decimation, write the full 90 fps
+  display = {vis.BasicModel(), vis.LineHistory()} -- show model and trails
 }
 
-config.HMD = {
-  topic = "/openvr/hmd_%d",
-  publisher = publishers.Pose
-}
-
--- Don't publish anything for Reference class trackables
+-- Don't publish anything for Reference or HMD class trackables
 config.Reference  = nil
+config.HMD        = nil
 
 -- modules return themselves
 return config
