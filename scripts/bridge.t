@@ -101,7 +101,7 @@ end
 
 -- create a big red ball so that there's something to see at least
 function create_scene(root)
-  local axis_geo = require("geometry/widgets.t").axis_widget_geo("axis", 0.4, 0.2, 6)
+  local axis_geo = require("geometry/widgets.t").axis_widget_geo(0.4, 0.2, 6, "axis")
   local pbr = require("shaders/pbr.t")
   local axis_mat = pbr.FacetedPBRMaterial({0.2,0.03,0.01,1.0},
                                           {0.001, 0.001, 0.001}, 0.7)

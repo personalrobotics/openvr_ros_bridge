@@ -23,7 +23,7 @@ local axis_widget_geo = nil
 m.BasicModel = make_factory(function(root, target_entity, trackable, options)
   options = options or {}
   if not axis_widget_geo then
-    axis_widget_geo = require("geometry/widgets.t").axis_widget_geo("axis", 0.4, 0.2, 6)
+    axis_widget_geo = require("geometry/widgets.t").axis_widget_geo(0.4, 0.2, 6, "axis")
   end
   local pbr = require("shaders/pbr.t")
   local mat_options = options.material or options
