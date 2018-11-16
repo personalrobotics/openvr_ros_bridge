@@ -14,7 +14,7 @@ to a file.
 
 # Installation
 
-Windows: download [the binary release](https://github.com/personalrobotics/openvr_ros_bridge/releases/tag/v0.2.0)
+Windows: download [the binary release](https://github.com/personalrobotics/openvr_ros_bridge/releases/tag/v0.3.0)
 and unzip somewhere convenient.
 
 Linux: download the binary release. Then compile the `renderimprovements` 
@@ -58,6 +58,14 @@ The [steamvr.vrsettings file](https://developer.valvesoftware.com/wiki/SteamVR/s
 must be edited so that
 ```
 "requireHmd": false,
+```
+
+## AMD Ryzen note
+
+If you have an AMD Ryzen or other exotic CPU, you will probably need to edit
+`scripts/core/core.t` within `truss.zip` and change line 8 to:
+```lua
+local use_ryzen_hack = true
 ```
 
 ## Linux notes
