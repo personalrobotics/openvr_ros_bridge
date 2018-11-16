@@ -11,8 +11,8 @@ local StatusComp = graphics.NanoVGComponent:extend("StatusComp")
 function StatusComp:init()
   self.mount_name = "status"
   self.lines = {"Line1", "Line2", "Line3", "etc."}
-  self.fsize = 32
-  self.linespacing = self.fsize * 1.25
+  self.fsize = 24
+  self.linespacing = self.fsize * 1.1
   self.x0 = 50
   self.y0 = 100
   StatusComp.super.init(self)
