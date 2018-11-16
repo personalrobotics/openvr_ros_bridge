@@ -19,7 +19,12 @@ config.Controller = {
   publisher = publishers.Pose,
   decimate = 1, -- no decimation, write the full 90 fps
   -- field_order = {"time", "position", "quaternion", "velocity", "angular_velocity"},
-  display = {vis.BasicModel(), vis.LineHistory()} -- show model and trails
+  display = {
+    vis.BasicModel{
+      material = {diffuse = {1.0, 0.0, 0.0, 1.0}}
+    },
+    vis.LineHistory()
+  } 
 }
 
 config.Generic = {

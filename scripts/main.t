@@ -2,16 +2,22 @@
 --
 -- openvr_ros_bridge main file
 
-local VRApp = require("vr/vrapp.t").VRApp
-local icosphere = require("geometry/icosphere.t")
+local VRTrackingApp = require("vr/vrtrackingapp.t").VRTrackingApp
+
 local gfx = require("gfx")
 local math = require("math")
-local entity = require("ecs/entity.t")
-local pipeline = require("graphics/pipeline.t")
+local ecs = require("ecs")
+local graphics = require("graphics")
+local geometry = require("geometry")
+
+local pbr = require("material/pbr.t")
+local orbitcam = require("gui/orbitcam.t")
+local grid = require("graphics/grid.t")
+
 local openvr = require("vr/openvr.t")
 local vrcomps = require("vr/components.t")
+
 local ros = require("io/ros.t")
-local grid = require("graphics/grid.t")
 local statusui = require("statusui.t")
 
 local conn = nil
@@ -20,17 +26,26 @@ function init()
   load_config()
 
   if config.Connection then
-    conn = config.Connection(truss.args[3])
+    conn = config.Connection(truss.args[2])
   end
 
-  app = VRApp({title = "openvr_ros_bridge", nvg = true,
-               mirror = "left", debugtext = true})
-  create_scene(app.ECS.scene)
+  app = VRTrackingApp{
+    title = "openvr_ros_bridge",
+    width = config.width or 1280,
+    height = config.height or 720,
+    msaa = true,
+    stats = true,
+    clear_color = 0x404080ff,
+    auto_create_controllers = false
+  }
+
+  app.camera:add_component(orbitcam.OrbitControl({min_rad = 1, max_rad = 10}))
+
+  create_scene(app.scene)
   openvr.on("trackable_connected", add_trackable)
   active_publishers = {}
 
-  status = statusui.create_ui()
-  app.ECS.scene:add(status)
+  status = app.scene:create_child(statusui.StatusUI, "status")
 end
 
 function update()
@@ -46,7 +61,7 @@ function update()
 end
 
 function load_config()
-  local fn = "config/" .. (truss.args[4] or "default.t")
+  local fn = "config/" .. (truss.args[3] or "default.t")
   config = require(fn)
 end
 
@@ -101,24 +116,27 @@ end
 
 -- create a big red ball so that there's something to see at least
 function create_scene(root)
-  local axis_geo = require("geometry/widgets.t").axis_widget_geo(0.4, 0.2, 6, "axis")
-  local pbr = require("shaders/pbr.t")
-  local axis_mat = pbr.FacetedPBRMaterial({0.2,0.03,0.01,1.0},
-                                          {0.001, 0.001, 0.001}, 0.7)
-  local thegrid = grid.Grid({ spacing = 0.5, numlines = 8,
-                              color = {0.8, 0.8, 0.8}, thickness = 0.003})
-  thegrid.quaternion:euler({x= -math.pi / 2.0, y=0, z=0}, 'ZYX')
+  local axis_geo = geometry.axis_widget_geo{scale = 0.5, length = 0.5}
+  local axis_mat = pbr.FacetedPBRMaterial{
+    diffuse = {0.2,0.03,0.01,1.0},
+    tint = {0.001, 0.001, 0.001}, 
+    roughness = 0.7
+  }
+  local thegrid = root:create_child(grid.Grid, "grid", { 
+    spacing = 0.5, numlines = 8,
+    color = {0.8, 0.8, 0.8}, thickness = 0.006
+  })
+  thegrid.quaternion:euler({x = -math.pi / 2.0, y = 0, z = 0}, 'ZYX')
   thegrid:update_matrix()
-  root:add(thegrid)
-  root:add(pipeline.Mesh("axis0", axis_geo, axis_mat))
+  root:create_child(graphics.Mesh, "mesh", axis_geo, axis_mat)
 end
 
 -- adds in visualizers
 function add_visualizers(trackable, visualizers)
-  local trackable_entity = entity.Entity3d()
-  trackable_entity:add_component(vrcomps.VRTrackableComponent(trackable))
-  local root = app.ECS.scene
-  root:add(trackable_entity)
+  local root = app.scene
+  local trackable_entity = root:create_child(ecs.Entity3d, "vis")
+  trackable_entity:add_component(vrcomps.TrackableComponent(trackable))
+  
   for _, vis_constructor in ipairs(visualizers) do
     vis_constructor(root, trackable_entity, trackable)
   end

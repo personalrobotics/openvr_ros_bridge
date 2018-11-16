@@ -9,16 +9,29 @@ to a file.
 
 * Windows: 64 bit windows and directx 11 support (e.g., a VR
   capable machine)
+* Linux: 64 bit Linux with real graphics drivers (NOT MESA)
 * [optional] ROS: the [rosbridge suite](http://wiki.ros.org/rosbridge_suite)
 
 # Installation
 
-Easy option: download [the binary release](https://github.com/personalrobotics/openvr_ros_bridge/releases/tag/v0.2.0)
+Windows: download [the binary release](https://github.com/personalrobotics/openvr_ros_bridge/releases/tag/v0.3.0)
 and unzip somewhere convenient.
 
-Harder option: compile [truss](https://github.com/PyryM/truss),
-zip all the folders in `truss/dist` into `truss.zip`, and place `truss.zip` and
-`truss.exe` in the root of this repo.
+Linux: download the binary release. Then compile the `renderimprovements` 
+branch of [truss](https://github.com/PyryM/truss).
+
+E.g.,
+```
+git clone --single-branch -b renderimprovements https://github.com/PyryM/truss 
+mkdir build
+cd build
+cmake ..
+make
+```
+
+Then from `dist/` copy the truss binary `truss` and the `libs/` folder
+ (hopefully populated with .so files) into the directory where you extracted
+ `openvr_ros_bridge`.
 
 # Usage
 
@@ -27,12 +40,46 @@ zip all the folders in `truss/dist` into `truss.zip`, and place `truss.zip` and
 SteamVR should be started before the bridge, otherwise the bridge will itself
 try to start SteamVR, which is unreliable and may lead to a freeze or a crash.
 
-`truss scripts/bridge.t url_or_filename config_script_name.t`
+`truss url_or_filename config_script_name.t`
 
 For example, the config script `config/default.t` will log to a text file in
 csv format. To log to "my_log.txt", run
 
-`truss scripts/bridge.t my_log.txt default.t`
+`truss my_log.txt default.t`
+
+## Running without an HMD
+
+It is possible to run without the HMD connected, if you have Vive trackers,
+or if you have paired the controllers to a Bluetooth adaptor (normally the
+controllers pair to the built-in Bluetooth of the HMD, which is why it must
+be plugged in).
+
+The [steamvr.vrsettings file](https://developer.valvesoftware.com/wiki/SteamVR/steamvr.vrsettings)
+must be edited so that
+```
+"requireHmd": false,
+```
+
+## AMD Ryzen note
+
+If you have an AMD Ryzen or other exotic CPU, you will probably need to edit
+`scripts/core/core.t` within `truss.zip` and change line 8 to:
+```lua
+local use_ryzen_hack = true
+```
+
+## Linux notes
+
+If you see the message `Going to create window; if you get an LLVM crash on linux at this point, the mostly likely reason is that you are using the mesa software renderer.` and then truss crashes, then you are probably using Mesa
+drivers. The solution is to install real drivers. You can also try to disable
+Mesa/llvmpipe by setting the `DRAW_USE_LLVM` environment variable to 0.
+
+SteamVR has special requirements to run on Linux: see 
+[the SteamVR Linux readme](https://github.com/ValveSoftware/SteamVR-for-Linux/blob/master/README.md).
+In particular, you will need to invoke truss like
+```
+~/.steam/steam/ubuntu12_32/steam-runtime/run.sh ./truss [bridge options]
+```
 
 ## ROS
 
@@ -41,13 +88,14 @@ On a machine with ROS:
 1. Start a roscore
 2. Launch the ros web bridge: `roslaunch rosbridge_server rosbridge_websocket.launch`
 
-On a windows machine with OpenVR and HMD connected:
+On the VR machine (can be the same as the ROS machine):
 
 1. Start SteamVR (optional, but greatly speeds up startup)
-2. In a command prompt, navigate to the openvr_ros_bridge folder
-3. In prompt run: `truss scripts/bridge.t "ws://[host]:[port]" ros.t`. Note that the
+2. In a command prompt/terminal, navigate to the openvr_ros_bridge folder
+3. In prompt run: `truss "ws://[host]:[port]" ros.t`. Note that the
 default rosbridge port is 9090, so this will look something like
-`truss scripts/bridge.t "ws://othercomp:9090" ros.t`.
+`truss "ws://othercomp:9090" ros.t`. (For Linux, see the note above regarding
+running with the Steam runtime).
 
 # Configuration
 
