@@ -40,6 +40,10 @@ function Pose:status()
   return self._trackable.device_class_name .. " | " .. (self._dname or self.name)
 end
 
+function Pose:get_prop(propname)
+  return self["_" .. propname]
+end
+
 local ViveButtons = class("ViveButtons")
 m.ViveButtons = ViveButtons
 
@@ -47,6 +51,7 @@ function ViveButtons:init(conn, trackable, options)
   self._decimate = options.decimate or 9 -- default to 10fps publishing
   self._trackable = trackable
   self._frame = 0
+  self._msg = {buttons = {0,0,0,0}, axes = {0.0, 0.0, 0.0}}
 end
 
 function ViveButtons:update()
@@ -60,6 +65,11 @@ function ViveButtons:update()
   msg.axes[2] = t.axes.trackpad1.y
   msg.axes[3] = t.axes.trigger1.x
   self:publish(msg)
+  self._msg = msg
+end
+
+function ViveButtons:get_prop(propname)
+  return self._msg[propname]
 end
 
 ViveButtons.status = Pose.status
@@ -81,6 +91,13 @@ end
 
 function Multi:status()
   return self._trackable.device_class_name .. "|" .. self.name
+end
+
+function Multi:get_prop(propname)
+  for _, pub in ipairs(self._pubs) do
+    local p = pub:get_prop(propname)
+    if p then return p end
+  end
 end
 
 return m

@@ -92,6 +92,7 @@ function add_trackable(trackable)
     local pub = cfg.publisher(conn, trackable, cfg)
     if pub then
       active_publishers[trackable.device_idx] = pub
+      trackable.publisher = pub
     else
       print("Trackable [" .. device_class .. "] did not produce a publisher.")
       print("Nothing will be published for this device.")

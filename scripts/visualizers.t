@@ -18,6 +18,67 @@ local function make_factory(constructor)
   end
 end
 
+local g_ui_ypos = 100
+
+local UIComp = graphics.NanoVGComponent:extend("UIComp")
+function UIComp:init(options)
+  self.mount_name = "ui"
+  self.fsize = options.font_size or 24
+  self.linespacing = self.fsize * 1.1
+  self.x0 = 50
+  self.y0 = g_ui_ypos
+  self.height = options.height or (self.linespacing * 1.5)
+  self.prop = options.prop or "frame"
+  self.trackable = options.trackable
+  if options.format then
+    if type(options.format) == 'string' then
+      local fstring = options.format
+      self.format = function(v)
+        return string.format(fstring, v)
+      end
+    elseif type(options.format) == 'function' then
+      self.format = options.format
+    else
+      truss.error("Format must be a format string or a function!")
+    end
+  end
+  g_ui_ypos = g_ui_ypos + self.height
+  UIComp.super.init(self)
+end
+
+function UIComp:nvg_setup(ctx)
+  self.colors = {
+    bg = ctx:RGBA(0, 0, 0, 128),
+    fg = ctx:RGB(255,255,255)
+  }
+end
+
+function UIComp:nvg_draw(ctx)
+  local font = ctx:load_font("font/SourceCodePro-Regular.ttf", "sans")
+  if not self.colors then self:nvg_setup(ctx) end
+
+  local line = "?"
+  if self.trackable and self.trackable.publisher then
+    local p = self.trackable.publisher:get_prop(self.prop)
+    local format = self.format or tostring
+    if p then line = format(p) end
+  end
+
+  local hx = ctx.width / 2.0
+
+  ctx:FontFace("sans")
+  ctx:FillColor(self.colors.fg)
+  ctx:FontSize(self.fsize)
+  ctx:Text(hx + self.x0, self.y0, line, nil)
+end
+
+m.PropDisplay = make_factory(function(root, target_entity, trackable, options)
+  options = options or {}
+  options.trackable = trackable
+  local display = root:create_child(ecs.Entity3d, "ui_display")
+  display:add_component(UIComp(options))
+end)
+
 -- simply attach a mesh drawable directly to the entity
 local axis_widget_geo = nil
 m.BasicModel = make_factory(function(root, target_entity, trackable, options)
@@ -45,7 +106,6 @@ local LineHistoryComponent = graphics.LineRenderComponent:extend("LineHistoryCom
 m.LineHistory = make_factory(function(root, target_entity, trackable, options)
   local line_entity = root:create_child(ecs.Entity3d, "historyline")
   line_entity:add_component(LineHistoryComponent(options, target_entity))
-  root:add(line_entity)
 end)
 
 function LineHistoryComponent:init(options, target)
