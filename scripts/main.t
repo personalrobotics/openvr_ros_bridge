@@ -34,7 +34,8 @@ function init()
     width = config.width or 1280,
     height = config.height or 720,
     msaa = true,
-    stats = true,
+    stats = config.stats ~= false,
+    vsync = (config.rate or 60) <= 60,
     clear_color = 0x404080ff,
     auto_create_controllers = false
   }
@@ -48,6 +49,7 @@ function init()
   status = app.scene:create_child(statusui.StatusUI, "status")
 end
 
+local t0 = truss.tic()
 function update()
   app:update()
   status.status.lines = {}
@@ -58,6 +60,12 @@ function update()
   end
   update_publishers(status.status.lines)
   if conn then conn:update() end
+  if config.rate and config.rate > 60 then
+    local dt_ms = truss.toc(t0) * 1000.0
+    local expected_dt_ms = 1000.0 / config.rate
+    if dt_ms < expected_dt_ms then truss.sleep(expected_dt_ms - dt_ms) end
+    t0 = truss.tic()
+  end
 end
 
 function load_config()
